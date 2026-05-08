@@ -13,7 +13,7 @@ Understand what a basic Dockerfile looks like, why it is insecure by default, an
 ### Layer Caching with Timed Builds
 
 **First build -- nothing is cached yet:**
-![First Build](Docker-Container-Security/Screenshots/Scenario1/first%20buid.png)
+![First Build](Screenshots/Scenario1/first%20buid.png)
 
 **Second build -- nothing has changed:**
 ![Second Build](Docker-Container-Security/Screenshots/Scenario1/second%20build.png)
