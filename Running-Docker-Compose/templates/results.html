@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<style>
+  .res-wrap { max-width:700px;margin:0 auto;padding:40px 20px 60px; }
+
+  .grade-hero { text-align:center;margin-bottom:36px; }
+  .grade-av { font-size:1.8rem;background:var(--card);border:1px solid var(--border);border-radius:999px;padding:8px 16px;display:inline-block;margin-bottom:16px; }
+  .grade-em { font-size:4rem;display:block;margin-bottom:12px;animation:pop 0.5s ease; }
+  @keyframes pop{0%{transform:scale(0);opacity:0}80%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+  .grade-title { font-size:2rem;font-weight:800;margin-bottom:6px; }
+  .grade-sub { color:var(--muted);font-size:0.95rem; }
+
+  .score-card {
+    background:var(--card);border:1px solid var(--border);
+    border-radius:20px;padding:28px;margin-bottom:20px;text-align:center;
+  }
+  .big-score {
+    font-family:'Space Mono',monospace;
+    font-size:clamp(3rem,10vw,5rem);font-weight:700;line-height:1;margin-bottom:4px;
+  }
+  .score-of { font-size:0.9rem;color:var(--muted);margin-bottom:20px; }
+  .sbar { height:10px;background:var(--border);border-radius:99px;overflow:hidden;margin-bottom:22px; }
+  .sfill { height:100%;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--accent));transition:width 1.1s ease; }
+  .s3 { display:grid;grid-template-columns:repeat(3,1fr);gap:12px; }
+  .mini { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center; }
+  .mini-n { font-family:'Space Mono',monospace;font-size:1.5rem;font-weight:700; }
+  .mini-l { font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:4px; }
+  .cn { color:var(--green); } .wn { color:var(--red); } .pn { color:var(--accent); }
+
+  .sec-title { font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;font-family:'Space Mono',monospace;margin:28px 0 14px; }
+
+  /* ── MongoDB callout ── */
+  .mongo-box {
+    background:linear-gradient(135deg,rgba(0,100,255,0.12),rgba(0,229,160,0.06));
+    border:1px solid rgba(0,200,255,0.2); border-radius:16px; padding:22px 24px; margin-bottom:20px;
+  }
+  .mongo-box h3 { font-size:0.95rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px; }
+  .mongo-steps { display:flex;flex-direction:column;gap:8px; }
+  .mstep {
+    display:flex;align-items:flex-start;gap:12px;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;padding:12px 14px;font-size:0.82rem;
+  }
+  .mstep-icon { font-size:1.1rem;flex-shrink:0;margin-top:1px; }
+  .mstep-body { line-height:1.5; }
+  .mstep-body code { background:rgba(0,200,255,0.1);color:var(--accent);padding:1px 6px;border-radius:4px;font-family:'Space Mono',monospace;font-size:0.8em; }
+  .mstep-body strong { color:var(--text); }
+
+  .wrong-list { display:grid;gap:10px; }
+  .wi { background:var(--card);border:1px solid rgba(255,77,109,0.2);border-radius:11px;padding:16px 18px; }
+  .wi-q { font-size:0.88rem;font-weight:600;margin-bottom:7px; }
+  .wi-a { font-size:0.78rem;color:var(--green);font-family:'Space Mono',monospace; }
+
+  .perfect { background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;text-align:center; }
+  .perfect .pe { font-size:3rem;margin-bottom:10px; }
+
+  .repo-box { background:linear-gradient(135deg,rgba(0,100,255,0.12),rgba(0,200,255,0.06));border:1px solid rgba(0,200,255,0.2);border-radius:16px;padding:22px 24px; }
+  .repo-box h3{font-size:0.95rem;font-weight:700;margin-bottom:6px;}
+  .repo-box p{font-size:0.82rem;color:var(--muted);line-height:1.6;margin-bottom:10px;}
+  .repo-box a{color:var(--accent);font-family:'Space Mono',monospace;font-size:0.8rem;text-decoration:none;}
+  .repo-box a:hover{text-decoration:underline;}
+
+  .action-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:32px;}
+</style>
+{% endblock %}
+
+{% block nav_right %}
+<div style="display:flex;align-items:center;gap:10px;">
+  <span class="chip">{{ score }} pts</span>
+  <div class="avatar-chip"><span class="av">{{ profile_avatar }}</span>{{ profile_name }}</div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="res-wrap">
+
+  <div class="grade-hero">
+    <div class="grade-av">{{ profile_avatar }} {{ profile_name }}</div>
+    <span class="grade-em">{{ grade_emoji }}</span>
+    <div class="grade-title" style="color:{{ grade_color }}">{{ grade_name }}</div>
+    <div class="grade-sub">{{ pct }}% score on the Docker Quiz</div>
+  </div>
+
+  <div class="score-card">
+    <div class="big-score" style="color:{{ grade_color }}">{{ score }}</div>
+    <div class="score-of">out of {{ total }} points</div>
+    <div class="sbar"><div class="sfill" id="sf" style="width:0%"></div></div>
+    <div class="s3">
+      <div class="mini"><div class="mini-n cn">{{ num_correct }}</div><div class="mini-l">Correct</div></div>
+      <div class="mini"><div class="mini-n wn">{{ total_questions - num_correct }}</div><div class="mini-l">Missed</div></div>
+      <div class="mini"><div class="mini-n pn">{{ pct }}%</div><div class="mini-l">Score</div></div>
+    </div>
+  </div>
+
+  <!-- ── MongoDB / Mongo Express guide ── -->
+  <div class="mongo-box">
+    <h3>🍃 Your Results Are Saved in MongoDB!</h3>
+    <div class="mongo-steps">
+      <div class="mstep">
+        <span class="mstep-icon">🖥️</span>
+        <div class="mstep-body">
+          <strong>Open Mongo Express</strong> at <code>http://localhost:8081</code> in your browser
+        </div>
+      </div>
+      <div class="mstep">
+        <span class="mstep-icon">🗄️</span>
+        <div class="mstep-body">
+          Click the <strong>dockerquiz</strong> database → you'll see two collections: <code>profiles</code> and <code>results</code>
+        </div>
+      </div>
+      <div class="mstep">
+        <span class="mstep-icon">🔍</span>
+        <div class="mstep-body">
+          Open <code>profiles</code> to see your name & avatar. Open <code>results</code> to see your score, grade, and timestamp — all saved by the app container talking to the MongoDB container over Docker's internal network!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Wrong answers review ── -->
+  {% if wrong_qs %}
+  <div class="sec-title">❌ Questions to Review ({{ wrong_qs|length }})</div>
+  <div class="wrong-list">
+    {% for q in wrong_qs %}
+    <div class="wi">
+      <div class="wi-q">{{ q.question }}</div>
+      <div class="wi-a">✓ {{ q.answer }} — {{ q.options | selectattr('0','eq',q.answer) | list | first | replace('A. ','') | replace('B. ','') | replace('C. ','') | replace('D. ','') }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="perfect">
+    <div class="pe">🎯</div>
+    <div style="font-weight:700;font-size:1.1rem;margin-bottom:6px;">Perfect Score!</div>
+    <div style="color:var(--muted);font-size:0.88rem;">Every answer correct. You're a Docker Captain! 🏆</div>
+  </div>
+  {% endif %}
+
+  <!-- ── Hands-on CTA ── -->
+  <div class="repo-box" style="margin-top:24px;">
+    <h3>🛠️ Go Hands-On with Docker</h3>
+    <p>Theory is great — but the real learning happens when you run containers yourself. Practice containerizing apps, writing Dockerfiles, and wiring up Compose stacks.</p>
+    <a href="https://github.com/samuel-nartey/devops-labs" target="_blank" rel="noopener">📦 github.com/samuel-nartey/devops-labs →</a>
+  </div>
+
+  <div class="action-row">
+    <a href="/" class="btn btn-primary">🔄 Play Again</a>
+    <a href="/" class="btn btn-ghost">🏠 Home</a>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+setTimeout(() => { document.getElementById('sf').style.width = '{{ pct }}%'; }, 300);
+{% endblock %}

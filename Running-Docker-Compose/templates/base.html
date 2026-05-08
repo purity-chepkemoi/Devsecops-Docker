@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DockerQuiz 🐋</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:      #080d18;
+      --surface: #0f1624;
+      --card:    #141d2e;
+      --card2:   #1a2540;
+      --border:  #1e3158;
+      --accent:  #00c8ff;
+      --blue:    #0066ff;
+      --green:   #00e5a0;
+      --red:     #ff4d6d;
+      --yellow:  #ffd166;
+      --text:    #ddeeff;
+      --muted:   #5a7298;
+      --white:   #ffffff;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,100,255,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 90% 90%, rgba(0,200,255,0.07) 0%, transparent 50%);
+    }
+
+    /* ── NAV ── */
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8,13,24,0.9);
+      backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 1.15rem; font-weight: 800; text-decoration: none; color: var(--text);
+    }
+    .nav-logo .accent { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+
+    /* ── CHIPS & BADGES ── */
+    .chip {
+      font-family: 'Space Mono', monospace;
+      background: rgba(0,200,255,0.08);
+      border: 1px solid rgba(0,200,255,0.18);
+      color: var(--accent); padding: 5px 14px;
+      border-radius: 999px; font-size: 0.78rem;
+    }
+    .badge {
+      background: var(--blue); color: #fff;
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 700;
+      font-family: 'Space Mono', monospace; letter-spacing: 0.06em;
+    }
+    .avatar-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--card2); border: 1px solid var(--border);
+      border-radius: 999px; padding: 5px 14px 5px 8px;
+      font-size: 0.85rem;
+    }
+    .avatar-chip .av { font-size: 1.2rem; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 30px; border-radius: 10px;
+      border: none; cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem; font-weight: 700;
+      text-decoration: none; letter-spacing: 0.02em;
+      transition: all 0.2s ease;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue), var(--accent));
+      color: #fff; box-shadow: 0 4px 24px rgba(0,100,255,0.35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,100,255,0.55); }
+    .btn-ghost {
+      background: transparent; color: var(--accent);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--accent); background: rgba(0,200,255,0.06); }
+    .btn:disabled { opacity: 0.4; pointer-events: none; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px 32px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    }
+
+    /* ── PROGRESS ── */
+    .progress-wrap { margin-bottom: 26px; }
+    .progress-info {
+      display: flex; justify-content: space-between;
+      margin-bottom: 8px; font-size: 0.8rem;
+      color: var(--muted); font-family: 'Space Mono', monospace;
+    }
+    .progress-bar { height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, var(--blue), var(--accent));
+      transition: width 0.5s ease;
+    }
+
+    /* ── MONO UTILITY ── */
+    .mono { font-family: 'Space Mono', monospace; }
+    .muted { color: var(--muted); }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <nav class="nav">
+    <a href="/" class="nav-logo">🐋 <span class="accent">Docker</span>Quiz</a>
+    <div class="nav-right">
+      {% block nav_right %}<span class="badge">LEARN DOCKER</span>{% endblock %}
+    </div>
+  </nav>
+
+  {% block content %}{% endblock %}
+
+  <script>{% block scripts %}{% endblock %}</script>
+</body>
+</html>

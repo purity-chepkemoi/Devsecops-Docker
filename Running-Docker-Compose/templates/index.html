@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<style>
+  .page {
+    min-height: calc(100vh - 57px);
+    display: grid; place-items: center;
+    padding: 40px 20px;
+  }
+  .hero { max-width: 800px; width: 100%; }
+
+  /* ── Hero top ── */
+  .hero-top { text-align: center; margin-bottom: 44px; }
+  .whale { font-size: 4.5rem; display: block; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+  .hero-top h1 { font-size: clamp(2rem,5vw,3.2rem); font-weight: 800; line-height: 1.15; margin-bottom: 12px; }
+  .hero-top h1 em { font-style: normal; color: var(--accent); }
+  .hero-top p { color: var(--muted); font-size: 1rem; line-height: 1.7; max-width: 480px; margin: 0 auto; }
+
+  /* ── Two-col layout ── */
+  .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media(max-width:680px){ .layout{grid-template-columns:1fr;} }
+
+  /* ── Profile form ── */
+  .form-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 28px; }
+  .form-card h2 { font-size: 1rem; font-weight: 800; margin-bottom: 22px; display:flex; align-items:center; gap:8px; }
+  .form-card h2 .step { background: var(--blue); color:#fff; width:24px; height:24px; border-radius:999px; font-size:0.75rem; display:inline-flex;align-items:center;justify-content:center; }
+
+  .field { margin-bottom: 18px; }
+  .field label { display:block; font-size:0.78rem; color:var(--muted); font-family:'Space Mono',monospace; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px; }
+  .field input, .field select {
+    width:100%; background:var(--surface); border:1.5px solid var(--border);
+    border-radius:10px; padding:12px 16px; color:var(--text);
+    font-family:'Syne',sans-serif; font-size:0.95rem;
+    transition:border-color 0.2s;
+    outline:none; appearance:none;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .field input::placeholder { color:var(--muted); }
+
+  /* ── Avatar picker ── */
+  .avatar-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .av-opt { display:none; }
+  .av-label {
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.6rem; height:48px; border-radius:10px;
+    background:var(--surface); border:2px solid var(--border);
+    cursor:pointer; transition:all 0.15s;
+  }
+  .av-opt:checked + .av-label { border-color:var(--accent); background:rgba(0,200,255,0.12); transform:scale(1.08); }
+
+  /* ── Info panel ── */
+  .info-panel { display:flex; flex-direction:column; gap:16px; }
+  .info-block {
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:20px 22px;
+  }
+  .info-block h3 { font-size:0.85rem; font-weight:700; margin-bottom:10px; display:flex;align-items:center;gap:8px; }
+  .info-block ul { list-style:none; display:flex; flex-direction:column; gap:7px; }
+  .info-block li { font-size:0.82rem; color:var(--muted); display:flex;align-items:center;gap:8px; line-height:1.4; }
+  .info-block li::before { content:''; width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0; }
+
+  .arch-diagram {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:16px; font-family:'Space Mono',monospace;
+    font-size:0.72rem; color:var(--muted); line-height:1.9;
+  }
+  .arch-diagram .c1{color:var(--accent);}
+  .arch-diagram .c2{color:#f5a623;}
+  .arch-diagram .c3{color:var(--green);}
+  .arch-diagram .arr{color:var(--border);}
+
+  .repo-link-box {
+    background:linear-gradient(135deg,rgba(0,100,255,0.12),rgba(0,200,255,0.06));
+    border:1px solid rgba(0,200,255,0.2); border-radius:14px; padding:18px 20px;
+  }
+  .repo-link-box p { font-size:0.82rem; color:var(--muted); margin-bottom:8px; line-height:1.5; }
+  .repo-link-box a { color:var(--accent); font-family:'Space Mono',monospace; font-size:0.78rem; text-decoration:none; }
+  .repo-link-box a:hover { text-decoration:underline; }
+
+  /* ── Preview card ── */
+  .preview {
+    margin-top:16px; border:1.5px dashed var(--border); border-radius:12px;
+    padding:14px 18px; display:flex; align-items:center; gap:14px;
+    transition:all 0.2s;
+  }
+  .preview-av { font-size:2rem; }
+  .preview-name { font-weight:700; font-size:1rem; }
+  .preview-role { font-size:0.8rem; color:var(--muted); margin-top:2px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page">
+  <div class="hero">
+
+    <div class="hero-top">
+      <span class="whale">🐋</span>
+      <h1>Learn <em>Docker</em> by Playing</h1>
+      <p>Create your profile, tackle 20 Docker questions, and see your score saved live in MongoDB — viewable in Mongo Express.</p>
+    </div>
+
+    <div class="layout">
+
+      <!-- ── Profile Form ── -->
+      <div class="form-card">
+        <h2><span class="step">1</span> Create Your Profile</h2>
+        <form method="POST" action="/create-profile" id="pf">
+
+          <div class="field">
+            <label>Your Name</label>
+            <input type="text" name="name" id="nameInput" placeholder="e.g. Samuel Nartey" required maxlength="40"/>
+          </div>
+
+          <div class="field">
+            <label>Your Role</label>
+            <select name="role" id="roleInput">
+              <option>Student</option>
+              <option>Developer</option>
+              <option>DevOps Engineer</option>
+              <option>SRE</option>
+              <option>Cloud Architect</option>
+              <option>Just Curious</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Pick Your Avatar</label>
+            <div class="avatar-grid">
+              {% set avatars = ['🐋','🐳','🦈','🦊','🐙','🚀','⚡','🔥','🎯','🧑‍💻'] %}
+              {% for av in avatars %}
+              <input class="av-opt" type="radio" name="avatar" id="av{{loop.index}}" value="{{ av }}" {% if loop.first %}checked{% endif %}/>
+              <label class="av-label" for="av{{loop.index}}">{{ av }}</label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Live preview -->
+          <div class="preview" id="preview">
+            <span class="preview-av" id="prevAv">🐋</span>
+            <div>
+              <div class="preview-name" id="prevName">Your Name</div>
+              <div class="preview-role" id="prevRole">Student</div>
+            </div>
+          </div>
+
+          <br/>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+            Start Quiz →
+          </button>
+        </form>
+      </div>
+
+      <!-- ── Info Panel ── -->
+      <div class="info-panel">
+
+        <div class="info-block">
+          <h3>🏗️ Container Architecture</h3>
+          <div class="arch-diagram">
+<span class="c1">[ Quiz App ]</span>   :5000<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="arr">│  depends_on</span><br/>
+<span class="c2">[ MongoDB  ]</span>   :27017<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="arr">│  same network</span><br/>
+<span class="c3">[ Mongo Express ]</span> :8081<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="arr">└─ browses MongoDB visually</span>
+          </div>
+        </div>
+
+        <div class="info-block">
+          <h3>📦 What Gets Saved</h3>
+          <ul>
+            <li>Your profile → <span class="mono" style="color:var(--accent);font-size:0.75em">profiles</span> collection</li>
+            <li>Your quiz result → <span class="mono" style="color:var(--accent);font-size:0.75em">results</span> collection</li>
+            <li>View both live in Mongo Express at <span class="mono" style="color:var(--yellow);font-size:0.75em">:8081</span></li>
+            <li>Data persists via a named Docker volume</li>
+          </ul>
+        </div>
+
+        <div class="repo-link-box">
+          <p>🛠️ Want hands-on Docker labs beyond this quiz?</p>
+          <a href="https://github.com/samuel-nartey/devops-labs" target="_blank" rel="noopener">
+            → github.com/samuel-nartey/devops-labs
+          </a>
+        </div>
+
+      </div>
+    </div><!-- /layout -->
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+const nameInput = document.getElementById('nameInput');
+const roleInput = document.getElementById('roleInput');
+const prevName  = document.getElementById('prevName');
+const prevRole  = document.getElementById('prevRole');
+const prevAv    = document.getElementById('prevAv');
+
+nameInput.addEventListener('input', () => {
+  prevName.textContent = nameInput.value || 'Your Name';
+});
+roleInput.addEventListener('change', () => {
+  prevRole.textContent = roleInput.value;
+});
+document.querySelectorAll('.av-opt').forEach(r => {
+  r.addEventListener('change', () => {
+    if (r.checked) prevAv.textContent = r.value;
+  });
+});
+{% endblock %}

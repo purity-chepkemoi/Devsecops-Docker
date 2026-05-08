@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<style>
+  .fb-wrap { max-width:700px; margin:0 auto; padding:32px 20px 60px; }
+  .banner { border-radius:14px; padding:20px 24px; display:flex; align-items:center; gap:16px; margin-bottom:20px; }
+  .banner.ok  { background:rgba(0,229,160,0.09); border:1.5px solid rgba(0,229,160,0.28); }
+  .banner.bad { background:rgba(255,77,109,0.09); border:1.5px solid rgba(255,77,109,0.28); }
+  .banner-icon { font-size:2.2rem; flex-shrink:0; }
+  .banner-title { font-size:1.2rem; font-weight:800; }
+  .banner.ok  .banner-title { color:var(--green); }
+  .banner.bad .banner-title { color:var(--red); }
+  .banner-sub { font-size:0.85rem; color:var(--muted); margin-top:3px; }
+  .q-recap { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 20px; margin-bottom:16px; font-size:0.9rem; color:var(--muted); }
+  .q-recap strong { color:var(--text); display:block; margin-bottom:6px; font-size:0.98rem; }
+  .ans-row { display:flex; align-items:center; gap:12px; padding:13px 16px; border-radius:10px; font-size:0.88rem; margin-bottom:10px; }
+  .ans-row.yours  { background:rgba(255,77,109,0.08); border:1px solid rgba(255,77,109,0.2); }
+  .ans-row.right  { background:rgba(0,229,160,0.08); border:1px solid rgba(0,229,160,0.2); }
+  .ans-dot { width:28px;height:28px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:0.78rem;font-weight:700; }
+  .yours .ans-dot { background:var(--red);color:#fff; }
+  .right .ans-dot { background:var(--green);color:#000; }
+  .ans-tag { font-size:0.72rem;color:var(--muted);font-family:'Space Mono',monospace;margin-left:auto;flex-shrink:0; }
+  .expl { background:var(--card); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:12px; padding:18px 22px; margin-bottom:24px; }
+  .expl h3 { font-size:0.72rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;font-family:'Space Mono',monospace;margin-bottom:8px; }
+  .expl p  { font-size:0.88rem;line-height:1.7;color:var(--muted); }
+  .next-row { display:flex;justify-content:space-between;align-items:center; }
+  .pts { font-family:'Space Mono',monospace;font-size:0.88rem; }
+  .pts.earned { color:var(--green); }
+  .pts.missed { color:var(--red); }
+</style>
+{% endblock %}
+
+{% block nav_right %}
+<div style="display:flex;align-items:center;gap:10px;">
+  <span class="chip">{{ score }} pts</span>
+  <div class="avatar-chip"><span class="av">{{ profile_avatar }}</span>{{ profile_name }}</div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="fb-wrap">
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span>Question {{ current }} / {{ total }} answered</span>
+      <span>{{ ((current / total) * 100) | round | int }}% complete</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" style="width:{{ ((current/total)*100)|round|int }}%"></div>
+    </div>
+  </div>
+
+  <div class="banner {{ 'ok' if is_correct else 'bad' }}">
+    <span class="banner-icon">{{ '✅' if is_correct else '❌' }}</span>
+    <div>
+      <div class="banner-title">{{ 'Correct! +' + question.points|string + ' points' if is_correct else 'Not quite!' }}</div>
+      <div class="banner-sub">{{ "Well done — that one's in the bag." if is_correct else 'Read the explanation below to lock it in.' }}</div>
+    </div>
+  </div>
+
+  <div class="q-recap">
+    <strong>{{ question.question }}</strong>
+  </div>
+
+  {% if not is_correct %}
+  <div class="ans-row yours">
+    <div class="ans-dot">{{ selected }}</div>
+    <span>{{ question.options | selectattr('0','eq',selected) | list | first }}</span>
+    <span class="ans-tag">YOUR ANSWER</span>
+  </div>
+  {% endif %}
+  <div class="ans-row right">
+    <div class="ans-dot">{{ question.answer }}</div>
+    <span>{{ question.options | selectattr('0','eq',question.answer) | list | first }}</span>
+    <span class="ans-tag">{{ '✓ CORRECT' if is_correct else 'CORRECT ANSWER' }}</span>
+  </div>
+
+  <div class="expl">
+    <h3>💡 Explanation</h3>
+    <p>{{ question.explanation }}</p>
+  </div>
+
+  <div class="next-row">
+    <span class="pts {{ 'earned' if is_correct else 'missed' }}">
+      {{ '+' + question.points|string + ' pts earned' if is_correct else '+0 pts this round' }}
+    </span>
+    {% if current < total %}
+      <a href="/question/{{ sid }}" class="btn btn-primary">Next Question →</a>
+    {% else %}
+      <a href="/results/{{ sid }}" class="btn btn-primary">See Results 🏁</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

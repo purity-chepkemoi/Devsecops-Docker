@@ -1,0 +1,55 @@
+services:
+
+  # ── 1. Quiz Application (our Flask app) ──────────────────────────────────
+  quiz-app:
+    build: .                          # Build from Dockerfile in this directory
+    container_name: dockerquiz-app
+    ports:
+      - "5000:5000"                   # HOST:CONTAINER — access at http://localhost:5000
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/  # "mongo" = the service name below (Docker DNS)
+    depends_on:
+      - mongo                         # Wait for MongoDB to start first
+    networks:
+      - quiz-network                  # All 3 services share this internal network
+    restart: unless-stopped
+
+  # ── 2. MongoDB (database) ────────────────────────────────────────────────
+  mongo:
+    image: mongo:7.0                  # Pull official MongoDB image from Docker Hub
+    container_name: dockerquiz-mongo
+    ports:
+      - "27017:27017"                 # Optional: expose so you can connect via Compass
+    volumes:
+      - mongo-data:/data/db           # Named volume — data persists across restarts
+    networks:
+      - quiz-network
+    restart: unless-stopped
+
+  # ── 3. Mongo Express (visual MongoDB browser) ────────────────────────────
+  mongo-express:
+    image: mongo-express:1.0.2        # Pull official Mongo Express image
+    container_name: dockerquiz-mongo-express
+    ports:
+      - "8081:8081"                   # Access the UI at http://localhost:8081
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo      # Points to the "mongo" service by name
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_BASICAUTH: "false"         # Disable login for easy local practice
+    depends_on:
+      - mongo
+    networks:
+      - quiz-network
+    restart: unless-stopped
+
+# ── Named Volume ─────────────────────────────────────────────────────────────
+# This keeps MongoDB data alive even if containers are stopped/removed
+volumes:
+  mongo-data:
+
+# ── Shared Network ───────────────────────────────────────────────────────────
+# All 3 containers can talk to each other using their SERVICE NAME as hostname
+# e.g. quiz-app connects to mongodb://mongo:27017  (not localhost!)
+networks:
+  quiz-network:
+    driver: bridge

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<style>
+  .quiz-wrap { max-width: 700px; margin: 0 auto; padding: 32px 20px 60px; }
+  .q-label { font-family:'Space Mono',monospace; font-size:0.72rem; color:var(--accent); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:14px; display:block; }
+  .q-text { font-size: clamp(1.05rem, 2.5vw, 1.3rem); font-weight: 700; line-height: 1.55; margin-bottom: 28px; }
+  .options { display:grid; gap:11px; margin-bottom:28px; }
+  .opt-label { display:flex; align-items:flex-start; gap:14px; padding:16px 20px; border-radius:12px; border:1.5px solid var(--border); background:var(--card); cursor:pointer; transition:all 0.15s ease; user-select:none; }
+  .opt-label:hover { border-color:var(--blue); background:rgba(0,100,255,0.07); transform:translateX(3px); }
+  .opt-label input { display:none; }
+  .opt-label.sel { border-color:var(--accent); background:rgba(0,200,255,0.09); }
+  .opt-key { flex-shrink:0; width:30px; height:30px; border-radius:7px; background:var(--border); display:flex; align-items:center; justify-content:center; font-family:'Space Mono',monospace; font-size:0.78rem; font-weight:700; transition:background 0.15s; margin-top:1px; }
+  .opt-label.sel .opt-key { background:var(--accent); color:#000; }
+  .opt-text { font-size:0.92rem; line-height:1.55; padding-top:4px; }
+  .submit-row { display:flex; justify-content:space-between; align-items:center; }
+  .hint { font-size:0.8rem; color:var(--muted); font-family:'Space Mono',monospace; }
+  #submit-btn { opacity:0.35; pointer-events:none; }
+  #submit-btn.ready { opacity:1; pointer-events:auto; }
+</style>
+{% endblock %}
+
+{% block nav_right %}
+<div style="display:flex;align-items:center;gap:10px;">
+  <span class="chip">{{ score }} pts</span>
+  <div class="avatar-chip"><span class="av">{{ profile_avatar }}</span>{{ profile_name }}</div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="quiz-wrap">
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span>Question {{ current }} / {{ total }}</span>
+      <span>{{ (((current-1) / total) * 100) | round | int }}% complete</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" style="width:{{ (((current-1)/total)*100)|round|int }}%"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="q-label">Q{{ current }} &nbsp;·&nbsp; {{ question.points }} points</span>
+    <p class="q-text">{{ question.question }}</p>
+
+    <form method="POST" action="/answer/{{ sid }}" id="qf">
+      <div class="options">
+        {% for opt in question.options %}
+        {% set letter = opt[0] %}
+        <label class="opt-label" id="ol-{{ letter }}">
+          <input type="radio" name="choice" value="{{ letter }}" required/>
+          <span class="opt-key">{{ letter }}</span>
+          <span class="opt-text">{{ opt[3:] }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <div class="submit-row">
+        <span class="hint">Select an answer to continue</span>
+        <button type="submit" class="btn btn-primary" id="submit-btn">Submit →</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+document.querySelectorAll('input[type="radio"]').forEach(r => {
+  r.addEventListener('change', () => {
+    document.querySelectorAll('.opt-label').forEach(l => l.classList.remove('sel'));
+    r.closest('.opt-label').classList.add('sel');
+    document.getElementById('submit-btn').classList.add('ready');
+  });
+});
+{% endblock %}
