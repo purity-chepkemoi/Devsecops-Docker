@@ -16,14 +16,14 @@ Understand what a basic Dockerfile looks like, why it is insecure by default, an
 ![First Build](Screenshots/Scenario1/first%20buid.png)
 
 **Second build -- nothing has changed:**
-![Second Build](Docker-Container-Security/Screenshots/Scenario1/second%20build.png)
+![Second Build](Screenshots/Scenario1/second%20build.png)
 
 **Third build -- simulate a code change:**
-![Third Build](Docker-Container-Security/Screenshots/Scenario1/third%20build.png)
+![Third Build](Screenshots/Scenario1/third%20build.png)
 
 ### Checkpoint
 1.  **Run `docker exec -it $(docker ps -q) whoami` against the running container. What name is printed?**
-    ![whoami](Docker-Container-Security/Screenshots/Scenario1/whoami.png)
+    ![whoami](Screenshots/Scenario1/whoami.png)
     * **Answer:** `root`. This means the process inside the container is running with root privileges (UID 0). By default, this is a security risk. If a process running as root is compromised, an attacker may have full control over the container environment and could potentially attempt "container breakout" techniques to access the host system.
 
 2.  **Look at your first and second build outputs. How many seconds did each take? How many layers showed CACHED on the second run?**
@@ -38,7 +38,7 @@ Understand what a basic Dockerfile looks like, why it is insecure by default, an
 
 ### Reflection
 * **Secret Exposure:** If an image contained real AWS access keys in `.env` and was pushed to a public repository, bots would likely scrape and abuse them within seconds or minutes.
-    ![Secrets Step 4](Docker-Container-Security/Screenshots/Scenario1/step4.png)
+    ![Secrets Step 4](Screenshots/Scenario1/step4.png)
 * **Cache Optimization:** To prevent `npm install` from re-running every time code changes, copy only `package.json` and `package-lock.json` first, run `npm install`, then copy the rest of the application code.
 
 ---
@@ -49,14 +49,14 @@ Understand what a basic Dockerfile looks like, why it is insecure by default, an
 Stop the application from running as root and understand concretely what that change protects against.
 
 ### Build and Run
-![Build and Run](Docker-Container-Security/Screenshots/Scenario2/build%20and%20run.png)
+![Build and Run](Screenshots/Scenario2/build%20and%20run.png)
 
 ### Verify the Permission Boundary
-![Verify Permissions](Docker-Container-Security/Screenshots/Scenario2/verify.png)
+![Verify Permissions](Screenshots/Scenario2/verify.png)
 
 ### Checkpoint
 1.  **Run `docker exec -it $(docker ps -q) whoami` against the running nonroot-app. What is printed?**
-    ![Checkpoint](Docker-Container-Security/Screenshots/Scenario2/checkpoint.png)
+    ![Checkpoint](Screenshots/Scenario2/checkpoint.png)
     * **Answer:** `appuser`. This confirms that the process is no longer executing with root privileges.
 
 2.  **Try `cat /app/.env` inside the nonroot container. Can appuser read it?**
@@ -73,20 +73,20 @@ Stop the application from running as root and understand concretely what that ch
 Prevent sensitive files from ever entering the Docker image in the first place.
 
 ### Rebuild and Inspect
-![Build](Docker-Container-Security/Screenshots/Scenario3/build.png)
-![Run](Docker-Container-Security/Screenshots/Scenario3/run.png)
+![Build](Screenshots/Scenario3/build.png)
+![Run](Screenshots/Scenario3/run.png)
 
 ### Checkpoint
 1.  **Run `docker run --rm secure-copy-app find /app -type f`. List every file present. Is .env among them?**
-    ![Checkpoint](Docker-Container-Security/Screenshots/Scenario3/checkpoint.png)
+    ![Checkpoint](Screenshots/Scenario3/checkpoint.png)
     * **Answer:** No. `.dockerignore` correctly prevents the file from being copied during the `COPY . .` instruction.
 
 2.  **Create a file named `test.pem`, rebuild, and run find again. Is `test.pem` present?**
     * **Answer:** No, if it is listed in `.dockerignore`.
-    ![Step 4a](Docker-Container-Security/Screenshots/Scenario3/step4a.png)
+    ![Step 4a](Screenshots/Scenario3/step4a.png)
 
 3.  **Temporarily remove `.dockerignore`, rebuild, and run find. What files appear?**
-    ![Step 4b](Docker-Container-Security/Screenshots/Scenario3/step4b.png)
+    ![Step 4b](Screenshots/Scenario3/step4b.png)
     * **Answer:** `.env`, `test.pem`, and other previously excluded files will now appear.
 
 ### Reflection
@@ -103,14 +103,14 @@ Separate the build environment from the runtime environment to reduce the attack
 ### Build Failures and Fixes
 During initial builds, failures occurred due to missing dependencies in `package.json` and incompatible commands in Alpine Linux.
 
-![Original JSON](Docker-Container-Security/Screenshots/Scenario4/json1.png)
-![Edited JSON](Docker-Container-Security/Screenshots/Scenario4/json2.png)
-![Build Error](Docker-Container-Security/Screenshots/Scenario4/Error.png)
-![Alpine Error](Docker-Container-Security/Screenshots/Scenario4/err.png)
+![Original JSON](Screenshots/Scenario4/json1.png)
+![Edited JSON](Screenshots/Scenario4/json2.png)
+![Build Error](Screenshots/Scenario4/Error.png)
+![Alpine Error](Screenshots/Scenario4/err.png)
 
 ### Build and Comparison
-![Multi-stage Build](Docker-Container-Security/Screenshots/Scenario4/build.png)
-![Image Sizes](Docker-Container-Security/Screenshots/Scenario4/sizes.png)
+![Multi-stage Build](Screenshots/Scenario4/build.png)
+![Image Sizes](Screenshots/Scenario4/sizes.png)
 
 ### Checkpoint
 1.  **Exact sizes shown in `docker images`:**
@@ -119,11 +119,11 @@ During initial builds, failures occurred due to missing dependencies in `package
     * **Difference:** ~1.4 GB reduction.
 
 2.  **Tools missing in `multistage-app`:**
-    ![Reduced Attack Surface](Docker-Container-Security/Screenshots/Scenario4/attacksurface.png)
+    ![Reduced Attack Surface](Screenshots/Scenario4/attacksurface.png)
     * **Answer:** `curl`, `git`, `apt`. `curl` is most valuable to an attacker for probing networks and downloading payloads.
 
 3.  **Confirm the Application Still Works:**
-    ![App Working](Docker-Container-Security/Screenshots/Scenario4/appworking.png)
+    ![App Working](Screenshots/Scenario4/appworking.png)
     * **Answer:** The app responds correctly, confirming that removing build tools does not break runtime functionality.
 
 ---
@@ -134,24 +134,24 @@ During initial builds, failures occurred due to missing dependencies in `package
 Apply kernel-level constraints to a running container.
 
 ### Build and Run
-![Build](Docker-Container-Security/Screenshots/Scenario5/build.png)
-![Individual Flags](Docker-Container-Security/Screenshots/Scenario5/run.png)
+![Build](Screenshots/Scenario5/build.png)
+![Individual Flags](Screenshots/Scenario5/run.png)
 
 ### Checkpoint
 1.  **With `--read-only` and `--tmpfs /tmp` applied, does `touch /tmp/test` succeed?**
-    ![Step 4a](Docker-Container-Security/Screenshots/Scenario5/step4a.png)
+    ![Step 4a](Screenshots/Scenario5/step4a.png)
     * **Answer:** Yes. The explicit `tmpfs` mount at `/tmp` provides a writable layer that overrides the global read-only constraint for that specific path.
 
 2.  **Run `docker inspect $(docker ps -q) | grep Memory`. What is the value?**
-    ![Inspect](Docker-Container-Security/Screenshots/Scenario5/inspect.png)
+    ![Inspect](Screenshots/Scenario5/inspect.png)
     * **Answer:** `134217728` bytes, which equals **128 MB**.
 
 3.  **With `--cap-drop=ALL` applied, try `ping 8.8.8.8`. What happens?**
-    ![Step 4b](Docker-Container-Security/Screenshots/Scenario5/step4b.png)
+    ![Step 4b](Screenshots/Scenario5/step4b.png)
     * **Answer:** It fails with "Permission denied". `ping` requires `CAP_NET_RAW` to open raw sockets, which was stripped.
 
 ### Final Verification
-![Fully Hardened Run](Docker-Container-Security/Screenshots/Scenario5/stillworking%20app.png)
+![Fully Hardened Run](Screenshots/Scenario5/stillworking%20app.png)
 
 ### Reflection
 * **Orchestration:** Constraints should be defined in `docker-compose.yml` under `deploy` resources or Kubernetes `securityContext`.
