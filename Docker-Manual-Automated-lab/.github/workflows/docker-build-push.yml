@@ -1,0 +1,92 @@
+# The name of the workflow that appears in the GitHub Actions UI.
+name: Build, Scan, Push and Verify Docker Image
+
+# --- Triggers ---
+# This workflow runs on pushes to the main branch and on pull requests targeting main.
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# Environment variables that are available to all jobs below.
+env:
+  DOCKER_HUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}   # From GitHub secrets
+  IMAGE_NAME: my-web-app
+  TAG_SUFFIX: john                                      # ← CHANGE THIS TO YOUR NAME/ID
+
+jobs:
+  # The job identifier (can be any string) – it will create a single job on the runner.
+  build-scan-push-verify:
+    runs-on: ubuntu-latest                              # Use the latest Ubuntu runner
+
+    steps:
+      # Step 1: Checkout the repository so the runner has access to the code.
+      - name: Checkout repository
+        uses: actions/checkout@v4                        # Official checkout action
+
+      # Step 2: Log in to Docker Hub using the stored secrets.
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3                     # Pre‑built action for Docker login
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Step 3: Build the image and load it into the local Docker daemon (no push yet).
+      - name: Build Docker image (load locally, do not push yet)
+        uses: docker/build-push-action@v5                # Official build‑push action
+        with:
+          context: .                                     # Build context is current dir
+          load: true                                     # Load image into local Docker daemon (needed for scanning)
+          push: false                                    # Do NOT push to registry now
+          tags: |                                        # Multiline: supply two tags
+            ${{ env.DOCKER_HUB_USER }}/${{ env.IMAGE_NAME }}:v1.0.0-${{ env.TAG_SUFFIX }}
+            ${{ env.DOCKER_HUB_USER }}/${{ env.IMAGE_NAME }}:latest
+
+      # Step 4: Scan the local image for vulnerabilities with Trivy.
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.20.0           # Official Trivy action
+        with:
+          image-ref: "${{ env.DOCKER_HUB_USER }}/${{ env.IMAGE_NAME }}:v1.0.0-${{ env.TAG_SUFFIX }}"
+          format: 'table'                                # Human‑readable table in logs
+          exit-code: '1'                                 # Fail the step if any vulnerabilities are found
+          ignore-unfixed: true                           # Only alert if a fix is NOT available
+          severity: 'HIGH,CRITICAL'                      # Only fail on these levels
+
+      # Step 5: Push the image to Docker Hub, but only if the previous step passed.
+      # The if condition ensures we never push a vulnerable image.
+      - name: Push Docker image to Hub
+        if: success()                                    # Only run if all previous steps succeeded
+        run: |
+          docker push ${{ env.DOCKER_HUB_USER }}/${{ env.IMAGE_NAME }}:v1.0.0-${{ env.TAG_SUFFIX }}
+          docker push ${{ env.DOCKER_HUB_USER }}/${{ env.IMAGE_NAME }}:latest
+
+      # Step 6: Pull the uploaded image and run a smoke test to verify it works.
+      - name: Pull image and run smoke tests
+        if: success()
+        run: |
+          echo "Pulling image..."
+          docker pull ${{ env.DOCKER_HUB_USER }}/${{ env.IMAGE_NAME }}:v1.0.0-${{ env.TAG_SUFFIX }}
+
+          echo "Starting test container..."
+          docker run -d -p 5000:5000 --name verify-container \
+            ${{ env.DOCKER_HUB_USER }}/${{ env.IMAGE_NAME }}:v1.0.0-${{ env.TAG_SUFFIX }}
+
+          # Give Flask a few seconds to start.
+          sleep 5
+
+          # Test the /health endpoint. curl -f fails on HTTP errors.
+          echo "Testing /health endpoint..."
+          curl -f http://localhost:5000/health || (echo "Health check failed!" && exit 1)
+
+          # Test the home page – ensure it contains the word 'hello' (case‑insensitive).
+          echo "Testing / endpoint..."
+          curl -s http://localhost:5000/ | grep -i "hello" || (echo "Home page missing greeting!" && exit 1)
+
+          echo "All smoke tests passed."
+
+      # Step 7: Clean up the test container, whether earlier steps passed or failed.
+      # if: always() ensures it runs even if the smoke tests fail.
+      - name: Remove test container
+        if: always()
+        run: docker rm -f verify-container || true       # '|| true' prevents step failure if container doesn't exist
