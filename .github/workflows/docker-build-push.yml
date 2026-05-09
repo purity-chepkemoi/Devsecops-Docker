@@ -3,24 +3,17 @@ name: Build, Scan, Push and Verify Docker Image
 
 # --- Triggers ---
 # This workflow runs on pushes to the main branch and on pull requests targeting main.
-
 on:
   push:
     branches: [ main ]
-    paths:
-      - "DevSecOps_Beginner_Lab/**"           # Changes to the lab directory
-      - ".github/workflows/docker-build-push.yml"  # Changes to this workflow file itself
   pull_request:
     branches: [ main ]
-    paths:
-      - "DevSecOps_Beginner_Lab/**"
-      - ".github/workflows/docker-build-push.yml"
 
 # Environment variables that are available to all jobs below.
 env:
   DOCKER_HUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}   # From GitHub secrets
   IMAGE_NAME: my-web-app
-  TAG_SUFFIX: habi                                      # ← CHANGE THIS TO YOUR NAME/ID
+  TAG_SUFFIX: john                                      # ← CHANGE THIS TO YOUR NAME/ID
 
 jobs:
   # The job identifier (can be any string) – it will create a single job on the runner.
@@ -43,7 +36,7 @@ jobs:
       - name: Build Docker image (load locally, do not push yet)
         uses: docker/build-push-action@v5                # Official build‑push action
         with:
-          context: ./DevSecOps_Beginner_Lab               # Build context scoped to the lab directory
+          context: .                                     # Build context is current dir
           load: true                                     # Load image into local Docker daemon (needed for scanning)
           push: false                                    # Do NOT push to registry now
           tags: |                                        # Multiline: supply two tags
@@ -52,11 +45,11 @@ jobs:
 
       # Step 4: Scan the local image for vulnerabilities with Trivy.
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.36.0           # Official Trivy action
+        uses: aquasecurity/trivy-action@0.36.0           # Official Trivy action
         with:
           image-ref: "${{ env.DOCKER_HUB_USER }}/${{ env.IMAGE_NAME }}:v1.0.0-${{ env.TAG_SUFFIX }}"
           format: 'table'                                # Human‑readable table in logs
-          exit-code: '1'                                 # Fail the pipeline if unfixed HIGH/CRITICAL CVEs are found
+          exit-code: '1'                                 # Fail the step if any vulnerabilities are found
           ignore-unfixed: true                           # Only alert if a fix is NOT available
           severity: 'HIGH,CRITICAL'                      # Only fail on these levels
 
