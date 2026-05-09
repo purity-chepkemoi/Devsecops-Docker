@@ -45,7 +45,7 @@ jobs:
 
       # Step 4: Scan the local image for vulnerabilities with Trivy.
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0           # Official Trivy action
+        uses: aquasecurity/trivy-action@master           # Official Trivy action
         with:
           image-ref: "${{ env.DOCKER_HUB_USER }}/${{ env.IMAGE_NAME }}:v1.0.0-${{ env.TAG_SUFFIX }}"
           format: 'table'                                # Human‑readable table in logs
