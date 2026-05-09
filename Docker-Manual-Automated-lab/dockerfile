@@ -1,0 +1,50 @@
+# ---- Minimal, secure production image ----
+# Base image: official Python 3.11, slim variant (smaller attack surface).
+FROM python:3.11-slim
+
+# LABEL instructions: key=value metadata for documentation and tooling.
+LABEL maintainer="your-name@example.com"
+LABEL version="1.0.0"
+LABEL description="Simple Flask web app for Docker/GitHub Actions lab"
+
+# Create a non‑root system group and user.
+# groupadd -r creates a system group. useradd -r creates a system user.
+# Running as non-root limits damage if the application is compromised.
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Set the working directory – all following commands will run inside /app.
+WORKDIR /app
+
+# Copy ONLY the requirements file first. This optimises build caching:
+# If requirements.txt hasn’t changed, the pip install layer will be reused.
+COPY requirements.txt .
+
+# Install Python dependencies.
+# --no-cache-dir: don’t store downloaded packages (reduces image size).
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code into the image.
+# The '.' means the whole build context (current directory).
+COPY . .
+
+# Change ownership of the application directory to the non‑root user.
+# This allows the app to write logs/temp files inside the container.
+RUN chown -R appuser:appuser /app
+
+# Switch to the non‑root user for all subsequent instructions.
+# This applies to CMD as well, so the process runs with limited privileges.
+USER appuser
+
+# Document that the container listens on port 5000 (informational, not a port mapping).
+EXPOSE 5000
+
+# HEALTHCHECK instruction: tells Docker how to check if the container is still alive.
+# --interval=30s   Check every 30 seconds.
+# --timeout=3s     The check must finish within 3 seconds.
+# --start-period=5s  Wait 5 seconds before starting checks (Flask needs time to start).
+# --retries=3      If 3 consecutive checks fail, mark container unhealthy.
+# The CMD uses curl to call the /health endpoint; exit 1 on failure.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+CMD curl -f http://localhost:5000/health || exit 1
+# Start the Flask application
+CMD ["python3", "app.py"]
