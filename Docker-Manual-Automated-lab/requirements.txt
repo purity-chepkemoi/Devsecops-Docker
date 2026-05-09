@@ -1,2 +1,2 @@
 # Pin Flask version 3.0.0 for reproducible builds.
-flask==3.0.0
+flask==3.1.1
