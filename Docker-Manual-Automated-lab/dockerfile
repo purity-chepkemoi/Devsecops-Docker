@@ -1,6 +1,6 @@
 # ---- Minimal, secure production image ----
 # Base image: official Python 3.11, slim variant (smaller attack surface).
-FROM python:3.11-slim
+FROM python3.13-slim
 
 # LABEL instructions: key=value metadata for documentation and tooling.
 LABEL maintainer="your-name@example.com"
