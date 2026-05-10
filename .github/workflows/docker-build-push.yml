@@ -8,12 +8,12 @@ on:
   push:
     branches: [ main ]
     paths:
-      - "DevSecOps_Beginner_Lab/**"           # Changes to the lab directory
+      - "Docker-Manual-Automated-lab/**"           # Changes to the lab directory
       - ".github/workflows/docker-build-push.yml"  # Changes to this workflow file itself
   pull_request:
     branches: [ main ]
     paths:
-      - "DevSecOps_Beginner_Lab/**"
+      - "Docker-Manual-Automated-lab/**"
       - ".github/workflows/docker-build-push.yml"
 
 # Environment variables that are available to all jobs below.
@@ -43,7 +43,8 @@ jobs:
       - name: Build Docker image (load locally, do not push yet)
         uses: docker/build-push-action@v5                # Official build‑push action
         with:
-          context: ./DevSecOps_Beginner_Lab               # Build context scoped to the lab directory
+          context: ./Docker-Manual-Automated-lab               # Build context scoped to the lab directory
+          dockerfile: ./Docker-Manual-Automated-lab/dockerfile # Explicit Dockerfile path
           load: true                                     # Load image into local Docker daemon (needed for scanning)
           push: false                                    # Do NOT push to registry now
           tags: |                                        # Multiline: supply two tags
