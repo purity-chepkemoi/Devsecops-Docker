@@ -1,6 +1,6 @@
 # Practical Lab: Running Your First Container Stack with Docker Compose
 
-This documentation outlines the practical steps taken to deploy, interact with, and tear down a multi-container application using Docker Compose. The lab demonstrates how to orchestrate a frontend quiz application, a MongoDB database, and a database management UI.
+This documentation presents the hands-on procedures followed to deploy, manage, and remove a multi-container application using Docker Compose. The lab showcases how container orchestration can be used to coordinate a frontend quiz application, a MongoDB database, and a database management interface within a unified environment. The workflow is inspired by practical Docker containerization concepts and deployment practices demonstrated in the repository: https://github.com/samuel-nartey/devops-labs/blob/feature/docker-manual-lab/Docker%20%26%20Containers/Running%20Your%20First%20Container/README.md.
 
 ## 1. Project Overview
 The stack consists of three primary services:
